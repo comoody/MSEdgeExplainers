@@ -65,7 +65,7 @@ To allow PWAs to handle URIs that are outside of their own scope, it is necessar
 
 ### Manifest Changes
 
-We propose adding a new _optional_ data field `url_handlers` to the manifest object. This data value will contain an array of URI handler declaration objects. Each object should contains a `base` string, an optional `paths` array of strings, and an optional `excludePaths` array of strings.
+We propose adding a new _optional_ data field `url_handlers` to the manifest object. This data value will contain an array of URI handler declaration objects. Each object should contains a `host` string, an optional `paths` array of strings, and an optional `excludePaths` array of strings. `host` must match valid hosts under [RFC 3986](https://tools.ietf.org/html/rfc3986). `path` and `excludePaths` must match valid paths.
 
 The `url_handlers` data serves as requests from the PWA to handle URIs. The browser should validate that the PWA has the authority to handle those URIs and then store the request for later use. On an OS that allows for deeper integration, the browser should also perform the URI handling registrations with the OS and keep them in sync with the app lifecycle.
 
@@ -77,7 +77,7 @@ Example web app manifest hosted at `www.contoso.com`:
   "description": "A Business App",
   "uri_handlers": [
       {
-          "base": "www.contoso.com",
+          "host": "www.contoso.com",
           "paths": ["*"],
           "excludePaths": [
               "/about",
@@ -86,11 +86,11 @@ Example web app manifest hosted at `www.contoso.com`:
           ]
       },
       {
-          "base": "*.contoso.com",
+          "host": "*.contoso.com",
           "paths": ["*"]
       },
       {
-          "base": "www.conto.so",
+          "host": "www.conto.so",
       }
   ],
   "icons": [
@@ -110,28 +110,28 @@ These are the fields in each URI handler object:
 
 | Field     | Required / Optional | Description                                      | Default                           |
 |:----------|:--------------------|:-------------------------------------------------|:----------------------------------|
-| `base`    | Required            | Base portion of the URI to be handled. Can also be a complete URI. | N/A             |
-| `paths`   | Optional            | Array of allowed paths relative to `base`        | `[]`                              |
-| `excludePaths` | Optional       | Array of disallowed paths relative to `base`     | `[]`                              |
+| `host`    | Required            | host portion of the URI to be handled. Can also be a complete URI. | N/A             |
+| `paths`   | Optional            | Array of allowed paths relative to `host`        | `[]`                              |
+| `excludePaths` | Optional       | Array of disallowed paths relative to `host`     | `[]`                              |
 
-In this scheme, a URI matches a URI handler if it matches the `base`, at least one of values in `paths` if there are any, does not match any of the values in `excludePaths`, and is [verifiably associated](#pwa-to-site-association) with the PWA.
+In this scheme, a URI matches a URI handler if it matches the `host`, at least one of values in `paths` if there are any, does not match any of the values in `excludePaths`, and is [verifiably associated](#pwa-to-site-association) with the PWA.
 
-Requested URIs do not have to be within the requesting PWA's scope. In this scheme, any URI can be registered as part of the URI handling request. The `base` field is necessary because URIs from different domains can be requested. Not restricting URIs to the same scope or domain as the requesting PWA gives the developer freedom to use multiple domain names for the same content and handle them with the same PWA. See [this section](#pwa-to-site-association) for how cross-domain requests are validated. The `base` field can start with a `*.` prefix to indicate the inclusion of subdomains.
+Requested URIs do not have to be within the requesting PWA's scope. In this scheme, any URI can be registered as part of the URI handling request. The `host` field is necessary because URIs from different domains can be requested. Not restricting URIs to the same scope or domain as the requesting PWA gives the developer freedom to use multiple domain names for the same content and handle them with the same PWA. See [this section](#pwa-to-site-association) for how cross-domain requests are validated. The `host` field can start with a `*.` prefix to indicate the inclusion of subdomains.
 
 (Implementation note: URI handling requests are registered with either the browser or the OS when a PWA is being installed. At this point, the browser should validate the requests. If necessary, the PWA install can be failed.)
 
 #### Wildcard Matching
 
-Wildcard characters can be used in the values of all three fields: `base`, `paths`, and `excludePaths`. The wildcard character `*` matches zero or more characters. Wildcard can only be used as a prefix for `base`. Wildcard can only be used as a postfix for `paths` and `excludePaths`. In-fix wildcards are disallowed to protect against poor performance during string matching.
+Wildcard characters can be used in the values of all three fields: `host`, `paths`, and `excludePaths`. The wildcard character `*` matches zero or more characters. Wildcard can only be used as a prefix for `host`. Wildcard can only be used as a postfix for `paths` and `excludePaths`. In-fix wildcards are disallowed to protect against poor performance during string matching.
 
-The `base` field is able to contain a wildcard prefix to allow the specification of sub-domains: eg. `*.contoso.com` matches `jadams.contoso.com` and `www.jqadams.contoso.com` but not `contoso.com`. There may be other ways of specifying a group of related domains using a proposal such as [First Party Sets](https://github.com/krgovind/first-party-sets).
+The `host` field is able to contain a wildcard prefix to allow the specification of sub-domains: eg. `*.contoso.com` matches `jadams.contoso.com` and `www.jqadams.contoso.com` but not `contoso.com`. There may be other ways of specifying a group of related domains using a proposal such as [First Party Sets](https://github.com/krgovind/first-party-sets).
 
 ### PWA to site association
 
-The `base` field in `url_handlers` requests must either match the requesting PWA's scope or [be the location of](#file-location) an association file which validates that the requested URIs' domain is associated with the requesting PWA:
+The `host` field in `url_handlers` requests must either match the requesting PWA's scope or [be the location of](#file-location) an association file which validates that the requested URIs' domain is associated with the requesting PWA:
 
-* If the `base` field is equal to or within the PWA's scope, there is no need to provide an association file. The association is already confirmed by the web app manifest. This will be the default case for most PWAs that are just trying to handle URIs within their own scope.
-* If the `base` field is outside of the PWA's scope, an association file needs to be downloadable from its path to prove an association to the app.
+* If the `host` field is equal to or within the PWA's scope, there is no need to provide an association file. The association is already confirmed by the web app manifest. This will be the default case for most PWAs that are just trying to handle URIs within their own scope.
+* If the `host` field is outside of the PWA's scope, an association file needs to be downloadable from its path to prove an association to the app.
 * The association file must be named `pwa-site-association` and must be found in a `.well-known` directory.
 
 #### pwa-site-association file
@@ -171,9 +171,9 @@ These are the fields in each association object:
 
 #### File Location
 
-In the case where a fully specified `base` is used, the association file must be found at `[base]/.well-known/pwa-site-association` (without an extension).
+In the case where a fully specified `host` is used, the association file must be found at `[host]/.well-known/pwa-site-association` (without an extension).
 
-If a `base` with a `*.` prefix is used, the pwa-site-association file must be present at the path without the prefix. Eg. a `base` of `*.contoso.com` must have a `pwa-site-association` file at `contoso.com/.well-known/pwa-site-association`.
+If a `host` with a `*.` prefix is used, the pwa-site-association file must be present at the path without the prefix. Eg. a `host` of `*.contoso.com` must have a `pwa-site-association` file at `contoso.com/.well-known/pwa-site-association`.
 
 #### Failure to Associate
 
@@ -185,7 +185,7 @@ It is possible for sites to modify their associations with installed PWAs by edi
 
 #### Shortened URIs
 
-Web applications often provide users with shortened URIs for their convenience. If developers would like to handle shortened URIs in a PWA, they have to have access to the `base` path of the shortened URIs to place the pwa-site-association file. This may not be possible when using third party URI shortening services that the developer does not have control over.
+Web applications often provide users with shortened URIs for their convenience. If developers would like to handle shortened URIs in a PWA, they have to have access to the `host` path of the shortened URIs to place the pwa-site-association file. This may not be possible when using third party URI shortening services that the developer does not have control over.
 
 ### Browser Changes
 
