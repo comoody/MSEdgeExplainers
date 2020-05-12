@@ -116,7 +116,7 @@ These are the fields in each URI handler object:
 | `paths`   | Optional            | Array of allowed paths relative to `host`        | `[]`                              |
 | `excludePaths` | Optional       | Array of disallowed paths relative to `host`     | `[]`                              |
 
-`host` must match valid hosts under [RFC 3986](https://tools.ietf.org/html/rfc3986). `path` and `excludePaths` must match valid paths. If a scheme is provided in `host`, it must be __https://__ and not __http://__. Otherwise, __https://__ will be assumed.
+`host` must match valid hosts under [RFC 3986](https://tools.ietf.org/html/rfc3986). `path` and `excludePaths` must match valid paths. If a scheme is provided in `host`, it must be __https://__ and not __http://__. Otherwise, __https://__ will be assumed. Handler objects with __http://__ `host` are invalid and should not be registered.
 
 In this scheme, a URI matches a URI handler if it matches the `host`, at least one of values in `paths` if there are any, does not match any of the values in `excludePaths`, and is [verifiably associated](#pwa-to-site-association) with the PWA.
 
@@ -126,7 +126,7 @@ Requested URIs do not have to be within the requesting PWA's scope. In this sche
 
 #### Wildcard Matching
 
-Wildcard characters can be used in the values of all three fields: `host`, `paths`, and `excludePaths`. The wildcard character `*` matches zero or more characters. Wildcard can only be used as a prefix for `host`. Wildcard can only be used as a postfix for `paths` and `excludePaths`. In-fix wildcards are disallowed to protect against poor performance during string matching.
+Wildcard characters can be used in the values of all three fields: `host`, `paths`, and `excludePaths`. The wildcard character `*` matches zero or more characters. Wildcard can only be used as a prefix for `host`. Wildcard can only be used as a postfix for `paths` and `excludePaths`. In-fix wildcards are disallowed to protect against poor performance during string matching. Handler objects with fields that violate these rules are invalid and should not be registered.
 
 The `host` field is able to contain a wildcard prefix to allow the specification of sub-domains: eg. `*.contoso.com` matches `jadams.contoso.com` and `www.jqadams.contoso.com` but not `contoso.com`. There may be other ways of specifying a group of related domains using a proposal such as [First Party Sets](https://github.com/krgovind/first-party-sets).
 
