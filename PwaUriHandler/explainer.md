@@ -65,7 +65,7 @@ To allow PWAs to handle URIs that are outside of their own scope, it is necessar
 
 ### Manifest Changes
 
-We propose adding a new _optional_ data field `url_handlers` to the manifest object. This data value will contain an array of URI handler declaration objects. Each object should contains a `host` string, an optional `paths` array of strings, and an optional `excludePaths` array of strings. `host` must match valid hosts under [RFC 3986](https://tools.ietf.org/html/rfc3986). `path` and `excludePaths` must match valid paths.
+We propose adding a new _optional_ data field `url_handlers` to the manifest object. This data value will contain an array of URI handler declaration objects. Each object should contains a `host` string, an optional `paths` array of strings, and an optional `excludePaths` array of strings.
 
 The `url_handlers` data serves as requests from the PWA to handle URIs. The browser should validate that the PWA has the authority to handle those URIs and then store the request for later use. On an OS that allows for deeper integration, the browser should also perform the URI handling registrations with the OS and keep them in sync with the app lifecycle.
 
@@ -113,6 +113,8 @@ These are the fields in each URI handler object:
 | `host`    | Required            | host portion of the URI to be handled. Can also be a complete URI. | N/A             |
 | `paths`   | Optional            | Array of allowed paths relative to `host`        | `[]`                              |
 | `excludePaths` | Optional       | Array of disallowed paths relative to `host`     | `[]`                              |
+
+`host` must match valid hosts under [RFC 3986](https://tools.ietf.org/html/rfc3986). `path` and `excludePaths` must match valid paths. If a scheme is provided in `host`, it must be __https://__ and not __http://__. Otherwise, __https://__ will be assumed.
 
 In this scheme, a URI matches a URI handler if it matches the `host`, at least one of values in `paths` if there are any, does not match any of the values in `excludePaths`, and is [verifiably associated](#pwa-to-site-association) with the PWA.
 
